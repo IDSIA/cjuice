@@ -336,46 +336,48 @@ end
 Calculate log likelihood for a batch of fully observed samples.
 (This is for when you already have a FlowΔ)
 """
-function log_likelihood_upper_per_instance(fc::FlowΔ, batch::PlainXData{Bool})
-    @assert (prob_origin(fc[end]) isa CredalΔNode) "FlowΔ must originate in a CredalΔ"
-    pass_up_down(fc, batch)
-    log_likelihoods = zeros(num_examples(batch))
-    indices = some_vector(Bool, flow_length(fc))::BitVector
-    for n in fc
-         if n isa DownFlow⋁ && num_children(n) != 1 # other nodes have no effect on likelihood
-            origin = prob_origin(n)::Credal⋁
-            foreach(n.children, origin.log_thetas) do c, log_theta
-                #  be careful here to allow for the Boolean multiplication to be done using & before switching to float arithmetic, or risk losing a lot of runtime!
-                # log_likelihoods .+= prod_fast(downflow(n), pr_factors(c)) .* log_theta
-                assign_prod(indices, downflow(n), pr_factors(c))
-                view(log_likelihoods, indices::BitVector) .+=  log_theta # see MixedProductKernelBenchmark.jl
-                # TODO put the lines above in Utils in order to ensure we have specialized types
-            end
-         end
-    end
-    log_likelihoods
-end
+#  function log_likelihood_upper_per_instance(fc::FlowΔ, batch::PlainXData{Bool})
+#      @assert (prob_origin(fc[end]) isa CredalΔNode) "FlowΔ must originate in a CredalΔ"
+#      pass_up_down(fc, batch)
+#      log_likelihoods = zeros(num_examples(batch))
+#      indices = some_vector(Bool, flow_length(fc))::BitVector
+#      for n in fc
+#           if n isa DownFlow⋁ && num_children(n) != 1 # other nodes have no effect on likelihood
+#              origin = prob_origin(n)::Credal⋁
+#              foreach(n.children, origin.log_thetas) do c, log_theta
+#                  #  be careful here to allow for the Boolean multiplication to be done using & before switching to float arithmetic, or risk losing a lot of runtime!
+#                  # log_likelihoods .+= prod_fast(downflow(n), pr_factors(c)) .* log_theta
+#                  assign_prod(indices, downflow(n), pr_factors(c))
+#                  view(log_likelihoods, indices::BitVector) .+=  log_theta # see MixedProductKernelBenchmark.jl
+#                  # TODO put the lines above in Utils in order to ensure we have specialized types
+# #             end
+#          end
+#     end
+#     log_likelihoods
+# end
 
 
-function log_likelihood_lower_per_instance(fc::FlowΔ, batch::PlainXData{Bool})
-    @assert (prob_origin(fc[end]) isa CredalΔNode) "FlowΔ must originate in a CredalΔ"
-    pass_up_down(fc, batch)
-    log_likelihoods = zeros(num_examples(batch))
-    indices = some_vector(Bool, flow_length(fc))::BitVector
-    for n in fc
-         if n isa DownFlow⋁ && num_children(n) != 1 # other nodes have no effect on likelihood
-            origin = prob_origin(n)::Credal⋁
-            foreach(n.children, origin.log_thetas) do c, log_theta
-                #  be careful here to allow for the Boolean multiplication to be done using & before switching to float arithmetic, or risk losing a lot of runtime!
-                # log_likelihoods .+= prod_fast(downflow(n), pr_factors(c)) .* log_theta
-                assign_prod(indices, downflow(n), pr_factors(c))
-                view(log_likelihoods, indices::BitVector) .+=  log_theta # see MixedProductKernelBenchmark.jl
-                # TODO put the lines above in Utils in order to ensure we have specialized types
-            end
-         end
-    end
-    log_likelihoods
-end
+# function log_likelihood_lower_per_instance(fc::FlowΔ, batch::PlainXData{Bool})
+#     @assert (prob_origin(fc[end]) isa CredalΔNode) "FlowΔ must originate in a CredalΔ"
+#     pass_up_down(fc, batch)
+#     log_likelihoods = zeros(num_examples(batch))
+#     indices = some_vector(Bool, flow_length(fc))::BitVector
+#     for n in fc
+#          if n isa DownFlow⋁ && num_children(n) != 1 # other nodes have no effect on likelihood
+#             origin = prob_origin(n)::Credal⋁
+#             foreach(n.children, origin.log_thetas) do c, log_theta
+#                 #  be careful here to allow for the Boolean multiplication to be done using & before switching to float arithmetic, or risk losing a lot of runtime!
+#                 # log_likelihoods .+= prod_fast(downflow(n), pr_factors(c)) .* log_theta
+#                 assign_prod(indices, downflow(n), pr_factors(c))
+#                 view(log_likelihoods, indices::BitVector) .+=  log_theta # see MixedProductKernelBenchmark.jl
+#                 # TODO put the lines above in Utils in order to ensure we have specialized types
+#             end
+#          end
+#     end
+#     log_likelihoods
+# end
+
+
 
 """
 Calculate the upper log likelihood for a batch of samples with partial evidence P(e).
@@ -386,6 +388,7 @@ To indicate a variable is not observed, pass -1 for that variable.
 function marginal_log_likelihood_upper_per_instance(pc::CredalΔ, batch::PlainXData{Int8})
     opts = (flow_opts★..., el_type=Float64, compact⋀=false, compact⋁=false)
     fc = UpFlowΔ(pc, num_examples(batch), Float64, opts)
+    println(batch)
     (fc, marginal_log_likelihood_upper_per_instance(fc, batch))
 end
 
@@ -409,6 +412,7 @@ To indicate a variable is not observed, pass -1 for that variable.
 """
 function marginal_log_likelihood_upper_per_instance(fc::UpFlowΔ, batch::PlainXData{Int8})
     @assert (prob_origin(fc[end]) isa CredalΔNode) "FlowΔ must originate in a CredalΔ"
+    println(batch)
     credal_marginal_upper_pass_up(fc, batch)
     pr(fc[end])
 end
@@ -424,6 +428,23 @@ function marginal_log_likelihood_lower_per_instance(fc::UpFlowΔ, batch::PlainXD
     credal_marginal_lower_pass_up(fc, batch)
     pr(fc[end])
 end
+
+"""
+### Lilith
+Calculate lower log likelihood of a dataset (incomplete, complete) 
+###
+"""
+
+# function marginal_log_likelihood_lower_dataset(pc::CredalΔ, dataset::PlainXData{Int8})
+#     sum(log_marginal_lower(pc, dataset))
+#     #sum(marginal_log_likelihood_lower_per_instance(pc,dataset)[2])
+# end
+
+
+#  function log_likelihood_lower_dataset(pc::CredalΔ, dataset::PlainXData{Bool})
+#      sum(log_prob_lower(pc, dataset))       
+# end
+
 
 
 """

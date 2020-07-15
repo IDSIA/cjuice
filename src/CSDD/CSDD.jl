@@ -17,7 +17,8 @@ log_marginal_lower,
 log_prob_lower,
 log_prob_upper,
 conditional_lower,
-conditional_upper
+conditional_upper,
+log_likelihood_lower_dataset
 # log_proba_lower
 # ProbCircuits
 # ProbΔNode, ProbΔ, ProbΔ, ProbLeafNode, ProbInnerNode,

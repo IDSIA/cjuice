@@ -12,7 +12,6 @@ using Clp
 #using LinearAlgebra
 
 function minimi(coeff :: Array{Float64,1}, l_bounds :: Array{Float64,1}, u_bounds :: Array{Float64,1})
-# cosi poi gli entro in broadcasting c, exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas_u)
     my_model = Model(Clp.Optimizer)
     set_optimizer_attribute(my_model, "LogLevel", 1)
      set_optimizer_attribute(my_model, "Algorithm", 4)
@@ -29,7 +28,6 @@ function minimi(coeff :: Array{Float64,1}, l_bounds :: Array{Float64,1}, u_bound
         #  println("Optimal Value:")
         #  println("min =", JuMP.objective_value(my_model))
         #  #getobjectivevalue
-     println("funzia")
      return JuMP.objective_value(my_model)     
 end      
 
@@ -52,10 +50,7 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
         npr = pr(n)
         npr[feature_matrix(data)[:,variable(n)] .< zero(eltype(F))] .= 1
         npr .= log.( npr .+ 1e-300 )
-        println(data)
-        println(feature_matrix(data))
-        println(typeof(feature_matrix(data)))
-        println("messaggio : ", npr)
+        
 
         return nothing
     end
@@ -68,7 +63,6 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
             # pr(n) .+= pr(n.children[i])
             broadcast!(+, pr(n), pr(n), pr(n.children[i]))
         end
-        println("check data : ", data)
 
         return nothing
     end
@@ -82,30 +76,21 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
 
         u = Array{Float64}(undef, num_examples(data), length(n.children))
         c = Array{Float64}(undef, num_examples(data), length(n.children))
-        println("u prima = ", u)
-        println("c prima = ", c)
-
-       
+        
 
         for i=1:num_examples(data)
-            println( "CONTROLLO")
 
-            # println(exp.(prob_origin(n).log_thetas_u))
-            # println(u[i,:])
+           
             u[i,:] .=  exp.(prob_origin(n).log_thetas_u)
         end
 
-        println("u dopo = ", u)
 
         for i=1:num_examples(data) 
-            println( "CONTROLLO")
-            # println(exp.(getindex.(pr.(n.children),i)))
-            # println(c[i,:])
+            
             c[i,:] .= exp.(getindex.(pr.(n.children),i)) ## TODO log is monotone + broadcast
         end
 
        
-        println("c dopo = ", c)
 
         
         optx = Array{Float64}(undef, num_examples(data), length(n.children))
@@ -128,7 +113,6 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
         for i=1:num_examples(data)
             pr(n)[i] = log(optx[i,:]'c[i,:])
         end
-        println("check data : ", data)
 
         return nothing
 
@@ -138,7 +122,6 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
     for n in circuit
         credal_marginal_upper_pass_up_node(n, cache, data)
     end
-    println("check data : ", data)
 
     return nothing
 end
@@ -179,31 +162,21 @@ function credal_marginal_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
 
         l = Array{Float64}(undef, num_examples(data), length(n.children))
         c = Array{Float64}(undef, num_examples(data), length(n.children))
-        println("l prima = ", l)
-        println("c prima = ", c)
-
-       
+        
 
         for i=1:num_examples(data)
-            println( "CONTROLLO")
-
-            # println(exp.(prob_origin(n).log_thetas_u))
-            # println(u[i,:])
+           
             l[i,:] .=  exp.(prob_origin(n).log_thetas)
         end
 
 
-        println("l dopo = ", l)
 
         for i=1:num_examples(data) 
-            println( "CONTROLLO")
-            # println(exp.(getindex.(pr.(n.children),i)))
-            # println(c[i,:])
+           
             c[i,:] .= exp.(getindex.(pr.(n.children),i)) ## TODO log is monotone + broadcast
         end
 
        
-        println("c dopo = ", c)
 
         
         optx = Array{Float64}(undef, num_examples(data), length(n.children))
@@ -228,7 +201,6 @@ function credal_marginal_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
         for i=1:num_examples(data)
             pr(n)[i] = log(optx[i,:]'c[i,:])
         end
-        println("check data : ", data)
 
         return nothing
 
@@ -512,7 +484,6 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
         
          # Construct the tuple to  propagate 4 values : conditional message, marginal lower message, marginal upper message, type
          pr(n) .= [x for x in zip(val_min,marginal_lower,marginal_upper,type)]
-         println("tupla literal : ", pr(n))
 
          return nothing
     end
@@ -599,17 +570,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
 
         pr(n) .= [x for x in zip(val_min,marginal_lower,marginal_upper,type)]
-        println("cond_query_first_child", cond_query_first_child)
-        println("cond_positive_val_second_child" , cond_positive_val_second_child)
-        println("cond_negative_val_second_child" , cond_negative_val_second_child)
-
-        println("cond_query_second_child", cond_query_second_child)
-        println("cond_positive_val_first_child" , cond_positive_val_first_child)
-        println("cond_negative_val_first_child" , cond_negative_val_first_child)
-
-        println("numero children : ", length(n.children))
-        println("tupla children AND node : ", pr.(n.children))
-        println("tupla AND node : ", pr(n))
+        
 
         return nothing
     end
@@ -626,16 +587,11 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
         if n.children[1] isa UpFlowLiteral
 
             coeff = Array{Float64}(undef, length(npr), length(n.children)) # length(n.children) dev'essere sempre 2, assert?
-            println("val_min_prima = ", val_min)
 
 
             for i=1:2
 
-                # println("positivity of children ", i, positive(n.children[i]))
-                # println("tripletta i-esimo children, per ogni instance, con i= ", i, " : " ,   pr(n.children[i]))
-                # println("lower bounds : ", exp.(prob_origin(n).log_thetas)) ### questi sono gli stessi per ogni istanza
-                # println("upper bounds : ", exp.(prob_origin(n).log_thetas_u))
-
+                
                 coeff[:,i] .= getindex.(pr(n.children[i]),1) 
                 
             end
@@ -645,7 +601,6 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
             end 
 
-             println("val_min_dopo = ", val_min)
              println("IT'S A TOP !")
         else 
         
@@ -656,11 +611,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
          ## conditional 
 
-            println("robetta da passare come coeff di tipo : ", getindex.(pr.(n.children),1))
-            #println("tuple dei children : ", pr.(n.children))
-            println("tuple della 1a inst  : ", getindex.(pr.(n.children),1))
-            println("primi el delle tuple della 1a inst: ", getindex.(getindex.(pr.(n.children),1),1))
-
+           
             c_co = Array{Float64}(undef, length(npr), length(n.children)) 
             c_marg_lo = Array{Float64}(undef, length(npr), length(n.children)) 
             c_marg_up = Array{Float64}(undef, length(npr), length(n.children)) 
@@ -672,10 +623,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
                 c_marg_up[i,:] = getindex.(getindex.(pr.(n.children),i),3) # vettore dei coefficenti del i-esimo problema MARG_UPPER  (i-esima instance)
             end
             
-            println("coeff cond  : ", c_co)
-            println("coeff marg_lo  : ", c_marg_lo)
-            println("coeff marg_up  : ", c_marg_up)
-
+    
 
             for i=1:length(npr) 
                 val_min[i] = minimi(c_co[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas) )
@@ -693,7 +641,6 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
     
     for n in circuit
         conditional_lower_pass_up_node(n,data,mu)
-       #println( "tupla : ", pr(n)) #non va
     end
     return nothing
 end

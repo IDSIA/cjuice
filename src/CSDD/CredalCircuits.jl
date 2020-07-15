@@ -435,10 +435,10 @@ Calculate lower log likelihood of a dataset (incomplete, complete)
 ###
 """
 
-# function marginal_log_likelihood_lower_dataset(pc::CredalΔ, dataset::PlainXData{Int8})
-#     sum(log_marginal_lower(pc, dataset))
-#     #sum(marginal_log_likelihood_lower_per_instance(pc,dataset)[2])
-# end
+function marginal_log_likelihood_lower_dataset(pc::CredalΔ, dataset::PlainXData{Int8})
+     return sum(log_marginal_lower(pc, dataset))
+     #sum(marginal_log_likelihood_lower_per_instance(pc,dataset)[2])
+ end
 
 
 #  function log_likelihood_lower_dataset(pc::CredalΔ, dataset::PlainXData{Bool})

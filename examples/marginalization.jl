@@ -41,70 +41,135 @@ using ProbabilisticCircuits
 
 
 dataSet=dataset(twenty_datasets("nltcs"); do_shuffle=false, batch_size=-1)
+#only_shuffle_split_train_valid_test(dataSet, percs=[0.75, 0.1, 0.15], rand_gen=None)
 dataTrain = dataSet.train
 
-#datatest
+println("type of dataTrain = ", typeof(dataTrain)) #type of dataTrain = PlainXData{Bool,BitArray{2}}
 
-matrixTest=convert.(Int8,dataSet.test.x) #covert Bool to Int8
-dataTest = XData(matrixTest)
+
+matrixTrain=convert.(Int8,dataSet.train.x) #covert Bool to Int8
+matrixTrain2 = matrixTrain[1:100,:]
+
+
+#println(matrixTrain2)
+
+#dataTrain2 = PlainXData(matrixTrain2) NO MI RITORNA PlainXData{Int8,Array{Int8,2}} e io voglio PlainXData{Bool,BitArray{2}}
+
+dataTrain2_ = convert.(Bool,matrixTrain2)
+
+dataTrain2 = PlainXData(dataTrain2_)
+
+println(typeof(dataTrain2))
+
+
+# data validation
+
+matrixValid = convert.(Int8,dataSet.valid.x) #covert Bool to Int8
+
+dataValid = XData(matrixValid) 
+
+
+
 
 #println("type Datatest",typeof(dataTest))
 
-csdd = learn_credal_circuit(WXData(dataTrain), 40.0); #using clt
+ #csdd = learn_credal_circuit(WXData(dataTrain2), 40.0); #using clt
 
-
-
-obs1 = XData(Int8.([1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1;0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1;0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1])) 
-
-
-
-
-upper_marg_obs1 = exp.(log_marginal_upper(csdd, obs1))
-lower_marg_obs1 = exp.(log_marginal_lower(csdd, obs1))
-
-
-println("Upper marginal obs1: $(upper_marg_obs1)")
-
-println("Lower marginal obs1: $(lower_marg_obs1)")
-
-
-
-# Testing log_likelihood of test dataset
-
-LLL = sum(log_marginal_lower(csdd, dataTest))
-LLU = sum(log_marginal_upper(csdd, dataTest))
-
-
-#LLL = log_likelihood_lower_dataset(csdd, dataTest)
-println("LLL of batch of obs = ", LLL)
-println("LLU of batch of obs = ", LLU)
+ csdd = learn_credal_circuit(WXData(dataTrain), 40.0); #using clt
 
 
 
 
-# Testing complete evidence likelihood upper and lower flows
+
+
+ ########################################################################################
+ # LLL, LLU and gap for growing portions of training data 
+ ########################################################################################
+
+
+ for i=1:16
+
+    matrixTrain_i = matrixTrain[1:1000*i,:]
+    dataTrain_i = PlainXData(convert.(Bool,matrixTrain_i))
+
+    csdd = learn_credal_circuit(WXData(dataTrain_i), 40.0); #using clt
+
+    LLL_i = sum(log_marginal_lower(csdd, dataValid))
+    LLU_i = sum(log_marginal_upper(csdd, dataValid))
+
+
+    println("LLL of data validation = ", LLL_i)
+    println("LLU of data validation = ", LLU_i)
+    println("LL gap = ", LLL_i - LLU_i)
+
+ end
+
+
+ ########################################################################################
+
+
+
+# obs1 = XData(Int8.([1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1;0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1;0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1])) 
+
+
+
+
+# upper_marg_obs1 = exp.(log_marginal_upper(csdd, obs1))
+# lower_marg_obs1 = exp.(log_marginal_lower(csdd, obs1))
+
+
+# println("Upper marginal obs1: $(upper_marg_obs1)")
+
+# println("Lower marginal obs1: $(lower_marg_obs1)")
+
+
+
+# # Testing log_likelihood of test dataset
+
+# LLL = sum(log_marginal_lower(csdd, dataValid))
+# LLU = sum(log_marginal_upper(csdd, dataValid))
+
+
+# println("LLL of data validation = ", LLL)
+# println("LLU of data validation = ", LLU)
+
+
+
+
+# # Testing complete evidence likelihood upper and lower flows
 
 # complete_obs = XData(Bool.([1 1 1 0 0 1 1 1 1 1 1 1 1 1 1 1; 1 1 1 0 0 1 1 1 1 1 0 0 0 0 0 0]))
 
-# lower_prob = exp.(log_prob_lower(csdd, complete_obs))
-# upper_prob = exp.(log_prob_upper(csdd, complete_obs))
-# println("Lower prob: $(lower_prob)")
-# println("Upper prob: $(upper_prob)")
+
+
+# upper_marg_complete_obs = exp.(log_marginal_upper(csdd, obs1))
+# lower_marg_complete_obs = exp.(log_marginal_lower(csdd, obs1))
+
+
+# println("Upper of complete obs using marginal: $(upper_marg_complete_obs)")
+
+# println("Lower of complete obs using marginal: $(lower_marg_complete_obs)")
+
+
+# # lower_prob = exp.(log_prob_lower(csdd, complete_obs))
+# # upper_prob = exp.(log_prob_upper(csdd, complete_obs))
+# # println("Lower prob: $(lower_prob)")
+# # println("Upper prob: $(upper_prob)")
 
 
 
 
-# Testing conditional inference upper and lower bounds
-## 1,0 observed/evidence variables values; 2,3 query varables values for 0,1;  -1 marginalize variables.
-## cond_queries:    X_1=0,X_2=0|X_3=0,X_4=0
-##             X_15=1,X_16=1|X_1=1,X_2=1             
-######cond_queries= XData(Int8.([2 1 0 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1; 1 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 3 1; 1 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 3 1 ]))
-######lower_cond = conditional_lower(csdd, cond_queries, [0.5, 0.6, 0.7])
-#upper_cond = conditional_upper(csdd, cond_queries)
-######println("Lower cond. prob: $(lower_cond)")
-#println("Upper cond. prob: $(upper_cond)")
+# # Testing conditional inference upper and lower bounds
+# ## 1,0 observed/evidence variables values; 2,3 query varables values for 0,1;  -1 marginalize variables.
+# ## cond_queries:    X_1=0,X_2=0|X_3=0,X_4=0
+# ##             X_15=1,X_16=1|X_1=1,X_2=1             
+# ######cond_queries= XData(Int8.([2 1 0 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1; 1 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 3 1; 1 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 3 1 ]))
+# ######lower_cond = conditional_lower(csdd, cond_queries, [0.5, 0.6, 0.7])
+# #upper_cond = conditional_upper(csdd, cond_queries)
+# ######println("Lower cond. prob: $(lower_cond)")
+# #println("Upper cond. prob: $(upper_cond)")
 
-# for n in csdd
-#     println("type of node : ", typeof(n))
-# end
+# # for n in csdd
+# #     println("type of node : ", typeof(n))
+# # end
 

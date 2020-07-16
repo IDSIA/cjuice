@@ -44,7 +44,7 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
     credal_marginal_upper_pass_up_node(n::UpFlowΔNode, ::PlainXData) = ()
 
     function credal_marginal_upper_pass_up_node(n::UpFlowLiteral{O,F}, cache::Array{Float64}, data::PlainXData{E}) where {E <: eltype(F)} where {O,F}
-        println("LITERAL")
+        #println("LITERAL")
         pass_up_node(n, data)
         # now override missing values by 1
         npr = pr(n)
@@ -56,7 +56,7 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
     end
 
     function credal_marginal_upper_pass_up_node(n::UpFlow⋀Cached, cache::Array{Float64}, ::PlainXData)
-        println("AND NODE")
+       # println("AND NODE")
 
         pr(n) .= 0
         for i=1:length(n.children)
@@ -69,7 +69,7 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
 
 
     function credal_marginal_upper_pass_up_node(n::UpFlow⋁Cached, cache::Array{Float64}, ::PlainXData)
-        println("OR NODE")
+       # println("OR NODE")
         
         n.pr .= 1e-300
         #pr(n) .= 1e-300
@@ -155,7 +155,7 @@ function credal_marginal_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
     end
 
     function credal_marginal_lower_pass_up_node(n::UpFlow⋁Cached, cache::Array{Float64}, ::PlainXData)
-        println("OR NODE")
+        #println("OR NODE")
         
         n.pr .= 1e-300
         #pr(n) .= 1e-300
@@ -392,7 +392,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
     function conditional_lower_pass_up_node(n::UpFlowLiteral{O,F}, data::PlainXData{E}, mu::Array{Float64,1}) where {E <: eltype(F)} where {O,F}
         
-        println("LITERAL NODE")
+        #println("LITERAL NODE")
 
         npr = pr(n)
         nsize = length(npr)
@@ -490,7 +490,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
     function conditional_lower_pass_up_node(n::UpFlow⋀Cached, ::PlainXData, mu::Array{Float64,1})
 
-        println("AND NODE")
+        #println("AND NODE")
 
         # to check if bot nodes are represented as and nodes
         # if n.children[1] isa UpFlowLiteral && n.children[2] isa UpFlowLiteral
@@ -576,7 +576,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
     end
 
     function conditional_lower_pass_up_node(n::UpFlow⋁Cached,  ::PlainXData, mu::Array{Float64,1})
-        println("OR NODE")
+        #println("OR NODE")
 
         npr = pr(n)
         val_min = zeros( length(npr))
@@ -601,7 +601,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
             end 
 
-             println("IT'S A TOP !")
+             #println("IT'S A TOP !")
         else 
         
              

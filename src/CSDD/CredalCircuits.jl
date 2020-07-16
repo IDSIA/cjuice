@@ -390,7 +390,6 @@ To indicate a variable is not observed, pass -1 for that variable.
 function marginal_log_likelihood_upper_per_instance(pc::CredalΔ, batch::PlainXData{Int8})
     opts = (flow_opts★..., el_type=Float64, compact⋀=false, compact⋁=false)
     fc = UpFlowΔ(pc, num_examples(batch), Float64, opts)
-    println(batch)
     (fc, marginal_log_likelihood_upper_per_instance(fc, batch))
 end
 
@@ -414,7 +413,6 @@ To indicate a variable is not observed, pass -1 for that variable.
 """
 function marginal_log_likelihood_upper_per_instance(fc::UpFlowΔ, batch::PlainXData{Int8})
     @assert (prob_origin(fc[end]) isa CredalΔNode) "FlowΔ must originate in a CredalΔ"
-    println(batch)
     credal_marginal_upper_pass_up(fc, batch)
     pr(fc[end])
 end

@@ -13,4 +13,4 @@
 
 # runtests(@__DIR__, skip=["runtests.jl", "helper"])
 
-include("marginalization.jl")
+include("../examples/marginalization.jl")

@@ -109,11 +109,6 @@ prob_origin(n::DecoratorΔNode)::CredalΔNode = origin(n, CredalΔNode)
 "Return the first origin that is a probabilistic circuit"
 prob_origin(c::DecoratorΔ)::CredalΔ = origin(c, CredalΔNode)
 
-function estimate_credal_parameters2(pc::CredalΔ, data::XData{Bool}, s_idm::Float64; pseudocount::Float64)
-    Logical.pass_up_down2(pc, data)
-    w = (data isa PlainXData) ? nothing : weights(data)
-    estimate_credal_parameters_cached2(pc, w, s_idm; pseudocount=pseudocount)
-end
 
 function estimate_credal_parameters_cached2(pc::CredalΔ, w, s_idm::Float64; pseudocount::Float64)
     flow(n) = Float64(sum(sum(n.data)))
@@ -144,6 +139,13 @@ function estimate_credal_parameters_cached2(pc::CredalΔ, w, s_idm::Float64; pse
 
     foreach(estimate_credal_parameters_node2, pc, s_idm)
 end
+
+function estimate_credal_parameters2(pc::CredalΔ, data::XData{Bool}, s_idm::Float64; pseudocount::Float64)
+    Logical.pass_up_down2(pc, data)
+    w = (data isa PlainXData) ? nothing : weights(data)
+    estimate_credal_parameters_cached2(pc, w, s_idm; pseudocount=pseudocount)
+end
+
 
 function log_likelihood_per_instance2(pc::CredalΔ, data::XData{Bool})
     Logical.pass_up_down2(pc, data)

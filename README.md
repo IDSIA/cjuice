@@ -4,8 +4,8 @@
 
 
 
-# ProbabilisticCircuits.jl
-Probabilistic Circuits - part of Juice (Julia Circuit Empanada)
+# C-Juice 
+C-Juice - A Credal extension of Juice (Julia Circuit Empanada)
 
 ## Installation
 

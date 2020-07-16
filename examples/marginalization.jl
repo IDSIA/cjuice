@@ -121,10 +121,10 @@ using ProbabilisticCircuits
 
     end
 
-    println( LL_lo_up_twenty_ds(0.16181))
+    println( LL_lo_up_twenty_ds(0.5))
   
 
-
+##
 # #########################################################################################
 
 

@@ -71,7 +71,7 @@ using ProbabilisticCircuits
 
 # #println("type Datatest",typeof(dataTest))
 
-#  #csdd = learn_credal_circuit(WXData(dataTrain2), 40.0); #using clt
+#  #csdd = learn_struct_credal_circuit(WXData(dataTrain2), 40.0)[1]; #using clt and vtree
 
 #  csdd = learn_credal_circuit(WXData(dataTrain), 40.0); #using clt
 
@@ -106,7 +106,8 @@ using ProbabilisticCircuits
 
           dataTrain= PlainXData(convert.(Bool,matrixTrain))
 
-          csdd = learn_credal_circuit(WXData(dataTrain), 40.0); #using clt
+         #  csdd = learn_credal_circuit(WXData(dataTrain), 40.0); #using clt
+         csdd =learn_struct_credal_circuit(WXData(dataTrain), 40.0)[1]; #using clt and vtree
 
           LLL = sum(log_marginal_lower(csdd, dataValid))
           LLU = sum(log_marginal_upper(csdd, dataValid))

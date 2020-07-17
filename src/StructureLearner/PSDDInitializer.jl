@@ -273,3 +273,140 @@ function compile_fully_factorized_psdd_from_vtree(vtree::PlainVtree)::ProbΔ
 
     lin
 end
+"""
+Learning from data a structured-decomposable credal circuit with several structure learning algorithms
+"""
+function learn_struct_credal_circuit(data::Union{XData, WXData}, s_idm::Float64; 
+        pseudocount = 1.0, algo = "chow-liu", algo_kwargs=(α=1.0, clt_root="graph_center"), vtree = "chow-liu", vtree_kwargs=(vtree_mode="balanced",))
+    if algo == "chow-liu"
+        clt = learn_chow_liu_tree(data; algo_kwargs...)
+        vtree = learn_vtree_from_clt(clt; vtree_kwargs...);
+        pc = compile_csdd_from_clt(clt, vtree);
+        estimate_credal_parameters(pc, convert(XBatches,data),s_idm ; pseudocount = pseudocount)
+        pc, vtree
+    else
+        error("Cannot learn a structured-decomposable circuit with algorithm $algo")
+    end
+end
+
+
+#####################
+# Compile CSDD from CLT and vtree
+#####################
+
+"Compile a psdd circuit from clt and vtree"
+function compile_csdd_from_clt(clt::MetaDiGraph, vtree::PlainVtree)
+    order = node2dag(vtree[end])
+    parent_clt = Var.(parent_vector(clt))
+
+    lin = Vector{CredalΔNode}()
+    cred_cache = CredalCache()
+    lit_cache = LitCache()
+    v2p = Dict{PlainVtreeNode, CredalΔ}()
+
+    get_params_cred(cpt::Dict) = length(cpt) == 2 ? [cpt[1], cpt[0]] : [cpt[(1,1)], cpt[(0,1)], cpt[(1,0)], cpt[(0,0)]]
+    function add_mapping_cred!(v::PlainVtreeNode, circuits::CredalΔ)
+        if !haskey(v2p, v); v2p[v] = Vector{CredalΔNode}(); end
+        foreach(c -> if !(c in v2p[v]) push!(v2p[v], c);end, circuits)
+    end
+
+    # compile vtree leaf node to terminal/true node
+    function compile_from_vtree_node_cred(v::PlainVtreeLeafNode)
+        var = v.var
+        children = Var.(outneighbors(clt, var))
+        cpt = get_prop(clt, var, :cpt)
+        parent = parent_clt[var]
+        if isequal(children, [])
+            circuit = compile_true_nodes_cred(var, v, get_params_cred(cpt), lit_cache, cred_cache, lin)
+        else
+            circuit = compile_literal_nodes_cred(var, v, get_params_cred(cpt), lit_cache, cred_cache, lin)
+        end
+        add_mapping_cred!(v, circuit)
+    end
+
+    # compile to decision node
+    function compile_from_vtree_node_cred(v::PlainVtreeInnerNode)
+        left_var = left_most_child(v.left).var
+        right_var = left_most_child(v.right).var
+        left_circuit = v2p[v.left]
+        right_circuit = v2p[v.right]
+
+        if parent_clt[left_var] == parent_clt[right_var] # two nodes are independent, compile to seperate decision nodes
+            circuit = [compile_decision_node_cred([l], [r], v, [1.0], cred_cache, lin) for (l, r) in zip(left_circuit, right_circuit)]
+        elseif left_var == parent_clt[right_var] # conditioned on left
+            cpt = get_prop(clt, left_var, :cpt)
+            circuit = compile_decision_nodes_cred(left_circuit, right_circuit, v, get_params_cred(cpt), cred_cache, lin)
+        else
+            throw("PlainVtree are not learned from the same CLT")
+        end
+        add_mapping_cred!(v, circuit)
+    end
+
+    foreach(compile_from_vtree_node_cred, vtree)
+    return lin
+end
+
+
+#####################
+# Construct credal circuit node
+#####################
+
+cred_children(n, cred_cache) =  
+    copy_with_eltype(map(c -> cred_cache[c], n.children), CredalΔNode{<:StructLogicalΔNode})
+
+"Add leaf nodes to circuit `lin`"
+function add_cred_leaf_node(var::Var, vtree::PlainVtreeLeafNode, lit_cache::LitCache, cred_cache::CredalCache, lin)
+    pos = StructLiteralNode{PlainVtreeNode}( var2lit(var), vtree)
+    neg = StructLiteralNode{PlainVtreeNode}(-var2lit(var), vtree)
+    lit_cache[var2lit(var)] = pos
+    lit_cache[-var2lit(var)] = neg
+    pos2 = CredalLiteral(pos)
+    neg2 = CredalLiteral(neg)
+    cred_cache[pos] = pos2
+    cred_cache[neg] = neg2
+    push!(lin, pos2)
+    push!(lin, neg2)
+    return (pos2, neg2)
+end
+
+"Add cred⋀ node to circuit `lin`"
+function add_cred⋀_node(children::CredalΔ, vtree::PlainVtreeInnerNode, cred_cache::CredalCache, lin)::Credal⋀
+    logic = Struct⋀Node{PlainVtreeNode}([c.origin for c in children], vtree)
+    cred = Credal⋀(logic, cred_children(logic, cred_cache))
+    cred_cache[logic] = cred
+    push!(lin, cred)
+    return cred
+end
+
+"Add cred⋁ node to circuit `lin`"
+function add_cred⋁_node(children::CredalΔ, vtree::PlainVtreeNode, thetas::Vector{Float64}, cred_cache::CredalCache, lin)::Credal⋁
+    logic = Struct⋁Node{PlainVtreeNode}([c.origin for c in children], vtree)
+    cred = Credal⋁(logic, cred_children(logic, cred_cache))
+    cred.log_thetas = log.(thetas)
+    cred_cache[logic] = cred
+    push!(lin, cred)
+    return cred
+end
+
+"Construct decision nodes given `primes` and `subs`"
+function compile_decision_node_cred(primes::CredalΔ, subs::CredalΔ, vtree::PlainVtreeInnerNode, params::Vector{Float64}, cred_cache::CredalCache, lin)
+    elements = [add_cred⋀_node([prime, sub], vtree, cred_cache, lin) for (prime, sub) in zip(primes, subs)]
+    return add_cred⋁_node(elements, vtree, params, cred_cache, lin)
+end
+
+"Construct literal nodes given variable `var`"
+function compile_literal_nodes_cred(var::Var, vtree::PlainVtreeLeafNode, probs::Vector{Float64}, lit_cache::LitCache, cred_cache::CredalCache, lin)
+    (pos, neg) = add_cred_leaf_node(var, vtree, lit_cache, cred_cache, lin)
+    return [pos, neg]
+end
+
+"Construct true nodes given variable `var`"
+function compile_true_nodes_cred(var::Var, vtree::PlainVtreeLeafNode, probs::Vector{Float64}, lit_cache::LitCache, cred_cache::CredalCache, lin)
+    (pos, neg) = add_cred_leaf_node(var, vtree, lit_cache, cred_cache, lin)
+    return [add_cred⋁_node([pos, neg], vtree, probs[i:i+1], cred_cache, lin) for i in 1:2:length(probs)]
+end
+
+"Construct decision nodes conditiond on different distribution"
+function compile_decision_nodes_cred(primes::CredalΔ, subs::CredalΔ, vtree::PlainVtreeInnerNode, params::Vector{Float64}, cred_cache::CredalCache, lin)
+    return [compile_decision_node_cred(primes, subs, vtree, params[i:i+1], cred_cache, lin) for i in 1:2:length(params)]
+end

@@ -34,7 +34,8 @@ function plot_marg(ds ::String)
 
 
    # learn the csdd
-   csdd = learn_credal_circuit(WXData(dataTrain), 40.0); #using clt
+   # csdd = learn_credal_circuit(WXData(dataTrain), 40.0); #using clt
+   csdd =learn_struct_credal_circuit(WXData(dataTrain), 40.0)[1]; #using clt and vtree
 
    
    println("CSDD done")
@@ -65,7 +66,7 @@ function plot_marg(ds ::String)
    plot1 = plot(x,mat_neg, title = string(ds, ": X=0"), label = ["P_lower" "P_upper"])
    plot2 = plot(x,mat_pos,  title = string(ds, ": X=1"), label = ["P_lower" "P_upper"])
    plot(plot1, plot2, layout=(2,1))
-   savefig(string("plot_marg_", ds, ".png"))
+   savefig(string("examples/plot_marg_", ds, ".png"))
       
 end
 

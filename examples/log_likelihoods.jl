@@ -44,7 +44,8 @@ function plot_ll(ds :: String, splits :: Int)
 
      dataTrain_k= PlainXData(convert.(Bool,matrixTrain_k))
 
-     csdd_k = learn_credal_circuit(WXData(dataTrain_k), 40.0); #using clt
+    #  csdd_k = learn_credal_circuit(WXData(dataTrain_k), 40.0); #using clt
+    csdd_k =learn_struct_credal_circuit(WXData(dataTrain_k), 40.0)[1]; #using clt and vtree
 
      LL[k,1] = sum(log_marginal_lower(csdd_k, dataValid))
      LL[k,2] = sum(log_marginal_upper(csdd_k, dataValid))
@@ -55,7 +56,7 @@ function plot_ll(ds :: String, splits :: Int)
 
   x = 1:splits
   plot(x, LL, title = string("Lower and Upper LogLikelihood of ", ds), label = ["Lower LL" "Upper LL"])
-  savefig(string("plot_ll_", ds, ".png"))  
+  savefig(string("examples/plot_ll_", ds, ".png"))  
    
   return nothing
   #return LL

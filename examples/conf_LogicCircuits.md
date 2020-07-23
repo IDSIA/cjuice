@@ -1,5 +1,5 @@
 
-## Configure our version of LogicCircuits Package
+## Configuration to add our version of LogicCircuits and other packages
 
 1. Open a console in your local folder repository
 
@@ -15,6 +15,9 @@
 5. Copy and run the next lines
 ``` 
 develop https://github.com/giulianavll/LogicCircuits.jl
+add JuMP
+add CSV
+add Statistics
 activate .
 update; precompile
 ```

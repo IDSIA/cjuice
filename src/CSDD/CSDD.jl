@@ -12,6 +12,7 @@ estimate_credal_parameters, estimate_credal_parameters_cached,
 CredalΔNode, CredalΔ, CredalLeafNode, CredalInnerNode,
 CredalLiteral, Credal⋀, Credal⋁, CredalCache,
 # , variable, num_parameters, compute_log_likelihood,
+idm,lp,
 log_marginal_upper,
 log_marginal_lower,
 log_prob_lower,
@@ -64,5 +65,6 @@ include("CredalCircuits.jl")
 include("CredalFlowCircuits.jl")
 include("VtreeLearner.jl")
 include("Queries.jl")
+include("Utilities.jl")
 
 end

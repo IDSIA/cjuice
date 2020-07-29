@@ -18,7 +18,7 @@ likl_csdd = zeros(n_exp)
 liku_csdd = zeros(n_exp)
 
 # https://github.com/UCLA-StarAI/Density-Estimation-Datasets
-for db in twenty_dataset_names # ["nltcs"]
+for db in ["nltcs"] #accidents"] #"nltcs"] #twenty_dataset_names #
 
     @show db
 

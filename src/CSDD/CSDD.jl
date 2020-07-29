@@ -18,7 +18,8 @@ log_prob_lower,
 log_prob_upper,
 conditional_lower,
 conditional_upper,
-log_likelihood_lower_dataset
+log_likelihood_lower_dataset,
+idm,lp, add_missingness, minimi
 # log_proba_lower
 # ProbCircuits
 # ProbΔNode, ProbΔ, ProbΔ, ProbLeafNode, ProbInnerNode,
@@ -64,5 +65,6 @@ include("CredalCircuits.jl")
 include("CredalFlowCircuits.jl")
 include("VtreeLearner.jl")
 include("Queries.jl")
+include("Utilities.jl")
 
 end

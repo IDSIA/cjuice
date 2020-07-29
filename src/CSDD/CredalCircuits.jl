@@ -121,6 +121,8 @@ function estimate_credal_parameters_cached2(pc::CredalΔ, w, s_idm::Float64; pse
         children_flows = children_flows_w
     end
 
+    @show childrenflows(n)
+
     estimate_credal_parameters_node2(n::CredalΔNode, s_idm::Float64) = ()
     function estimate_credal_parameters_node2(n::Credal⋁, s_idm::Float64)
         if num_children(n) == 1

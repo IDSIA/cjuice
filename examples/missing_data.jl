@@ -17,10 +17,11 @@ end
 db = "nltcs"
 @show db
 ess = 1.0
+threshold = 0.1
 dataSet=dataset(twenty_datasets(db); do_shuffle=false, batch_size=-1)
 
 learner(dataSet.train,ess)
-dataSetMissing = add_missingness(dataSet.train, ess)
+dataSetMissing = add_missingness(dataSet.train, threshold)
 csdd = learn_struct_credal_circuit(WXData(dataSet.train), ess)[1]
 
 n = 16

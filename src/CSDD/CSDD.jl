@@ -63,8 +63,8 @@ idm,lp, add_missingness, minimi
 
 include("CredalCircuits.jl")
 include("CredalFlowCircuits.jl")
-include("VtreeLearner.jl")
-include("Queries.jl")
+#include("VtreeLearner.jl")
+#include("Queries.jl")
 include("Utilities.jl")
 
 end

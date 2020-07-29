@@ -18,7 +18,7 @@ end
 
 function add_missingness(data :: PlainXData{Bool,BitArray{2}} , ratio :: Float64)
     data2 = convert.(Int8,data.x)
-    data2[rand(Float16,size(data.x)) .< ratio] .= 2
+    data2[rand(Float16,size(data.x)) .< ratio] .= -1
     return data2
 end
 

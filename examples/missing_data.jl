@@ -25,7 +25,7 @@ dataSetMissing = add_missingness(dataSet.train, threshold)
 csdd = learn_struct_credal_circuit(WXData(dataSet.train), ess)[1]
 
 n = 16
-@show log_marginal_lower(csdd, PlainXData(convert.(Int8, -ones(n,n) + 2*I)))
+@show log_marginal_upper(csdd, PlainXData(convert.(Int8, -ones(n,n) + 2*I)))
 
-sdd = load_logical_circuit("examples/random.sdd")
-@show typeof(sdd),length(sdd)
+#sdd = load_logical_circuit("examples/random.sdd")
+#@show typeof(sdd),length(sdd)

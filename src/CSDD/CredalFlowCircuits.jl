@@ -40,13 +40,14 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
         n.pr .= 1e-300
         #pr(n) .= 1e-300
 
+        l = Array{Float64}(undef, num_examples(data), length(n.children))
         u = Array{Float64}(undef, num_examples(data), length(n.children))
         c = Array{Float64}(undef, num_examples(data), length(n.children))
 
 
         for i=1:num_examples(data)
 
-
+            l[i,:] .=  exp.(prob_origin(n).log_thetas)
             u[i,:] .=  exp.(prob_origin(n).log_thetas_u)
         end
 
@@ -74,7 +75,8 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
             end
         end
 
-
+        @show c
+        @show u
 
         for i=1:num_examples(data)
             pr(n)[i] = log(optx[i,:]'c[i,:])

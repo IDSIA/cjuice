@@ -9,7 +9,7 @@ const ⊤ = convert(Lit, 0)
 """
 Learning from data a structured-decomposable circuit with several structure learning algorithms
 """
-function learn_struct_prob_circuit(data::Union{XData, WXData}; 
+function learn_struct_prob_circuit(data::Union{XData, WXData};
         pseudocount = 1.0, algo = "chow-liu", algo_kwargs=(α=1.0, clt_root="graph_center"), vtree = "chow-liu", vtree_kwargs=(vtree_mode="balanced",))
     if algo == "chow-liu"
         clt = learn_chow_liu_tree(data; algo_kwargs...)
@@ -148,7 +148,7 @@ end
 # Construct probabilistic circuit node
 #####################
 
-prob_children(n, prob_cache) =  
+prob_children(n, prob_cache) =
     copy_with_eltype(map(c -> prob_cache[c], n.children), ProbΔNode{<:StructLogicalΔNode})
 
 "Add leaf nodes to circuit `lin`"
@@ -276,7 +276,7 @@ end
 """
 Learning from data a structured-decomposable credal circuit with several structure learning algorithms
 """
-function learn_struct_credal_circuit(data::Union{XData, WXData}, s_idm::Float64; 
+function learn_struct_credal_circuit(data::Union{XData, WXData}, s_idm::Float64;
         pseudocount = 1.0, algo = "chow-liu", algo_kwargs=(α=1.0, clt_root="graph_center"), vtree = "chow-liu", vtree_kwargs=(vtree_mode="balanced",))
     if algo == "chow-liu"
         clt = learn_chow_liu_tree(data; algo_kwargs...)
@@ -351,7 +351,7 @@ end
 # Construct credal circuit node
 #####################
 
-cred_children(n, cred_cache) =  
+cred_children(n, cred_cache) =
     copy_with_eltype(map(c -> cred_cache[c], n.children), CredalΔNode{<:StructLogicalΔNode})
 
 "Add leaf nodes to circuit `lin`"

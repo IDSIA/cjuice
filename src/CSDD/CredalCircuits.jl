@@ -121,6 +121,8 @@ function estimate_credal_parameters_cached2(pc::CredalΔ, w, s_idm::Float64; pse
         children_flows = children_flows_w
     end
 
+    @show childrenflows(n)
+
     estimate_credal_parameters_node2(n::CredalΔNode, s_idm::Float64) = ()
     function estimate_credal_parameters_node2(n::Credal⋁, s_idm::Float64)
         if num_children(n) == 1
@@ -134,6 +136,8 @@ function estimate_credal_parameters_cached2(pc::CredalΔ, w, s_idm::Float64; pse
             # @assert isapprox(sum(exp.(n.log_thetas)), 1.0, atol=1e-6) "Parameters do not sum to one locally"
             # normalize away any leftover error
             # n.log_thetas .- logsumexp(n.log_thetas)
+            #print("=====cccccc===========")
+            #@show n,children_flows(n),flow(n)
         end
     end
 
@@ -266,10 +270,12 @@ function estimate_credal_parameters_node(n::AggregateFlow⋁, s_idm::Float64; ps
         uniform_pseudocount = pseudocount / num_children(n)
         origin.log_thetas .= log.( (n.aggr_flow_children .+ uniform_pseudocount) ./ (smoothed_aggr_flow .+ s_idm ))
         origin.log_thetas_u .= log.( ((n.aggr_flow_children .+ uniform_pseudocount) .+ s_idm) ./ (smoothed_aggr_flow .+ s_idm ))
+        #@show n.aggr_flow,n.aggr_flow_children
         # @assert isapprox(sum(exp.(origin.log_thetas)), 1.0, atol=1e-6) "Parameters do not sum to one locally: $(exp.(origin.log_thetas)), estimated from $(n.aggr_flow) and $(n.aggr_flow_children). Did you actually compute the aggregate flows?"
         #normalize away any leftover error ()
         # origin.log_thetas .- logsumexp(origin.log_thetas)
     end
+
 end
 
 # compute log likelihood
@@ -431,7 +437,7 @@ end
 
 """
 ### Lilith
-Calculate lower log likelihood of a dataset (incomplete, complete) 
+Calculate lower log likelihood of a dataset (incomplete, complete)
 ###
 """
 
@@ -442,13 +448,13 @@ function marginal_log_likelihood_lower_dataset(pc::CredalΔ, dataset::PlainXData
 
 
 #  function log_likelihood_lower_dataset(pc::CredalΔ, dataset::PlainXData{Bool})
-#      sum(log_prob_lower(pc, dataset))       
+#      sum(log_prob_lower(pc, dataset))
 # end
 
 
 
 """
-Calculate conditional inference upper bound 
+Calculate conditional inference upper bound
 """
 
 function conditional_upper(pc::CredalΔ, batch::PlainXData{Int8})
@@ -457,7 +463,7 @@ end
 
 
 """
-Calculate conditional inference lower bound 
+Calculate conditional inference lower bound
 """
 
 function conditional_lower(pc::CredalΔ, batch::PlainXData{Int8}, mu::Array{Float64,1})
@@ -466,7 +472,7 @@ end
 
 
 """
-Calculate conditional inference upper bound per instance 
+Calculate conditional inference upper bound per instance
 """
 function conditional_upper_per_instance(pc::CredalΔ, batch::PlainXData{Int8})
     opts = (compact⋀=false, compact⋁=false)
@@ -476,17 +482,17 @@ function conditional_upper_per_instance(pc::CredalΔ, batch::PlainXData{Int8})
 end
 
 """
-Calculate conditional inference upper bound per instance 
+Calculate conditional inference upper bound per instance
 """
 function conditional_lower_per_instance(pc::CredalΔ, batch::PlainXData{Int8}, mu::Array{Float64,1})
     opts = (compact⋀=false, compact⋁=false)
-    #Initialize the flows as a tuple instead of a single value 
+    #Initialize the flows as a tuple instead of a single value
     fc = UpFlowΔ(pc, num_examples(batch), Tuple{Float64,Float64,Float64,Float64},opts);
     (fc, conditional_lower_instance(fc, batch, mu))
 end
 
 """
-Calculate conditional inference upper bound per instance 
+Calculate conditional inference upper bound per instance
 
 """
 function conditional_upper_instance(fc::UpFlowΔ, batch::PlainXData{Int8})
@@ -497,7 +503,7 @@ end
 
 
 """
-Calculate conditional inference lowe bound per instance 
+Calculate conditional inference lowe bound per instance
 
 """
 function conditional_lower_instance(fc::UpFlowΔ, batch::PlainXData{Int8}, mu::Array{Float64,1})
@@ -659,5 +665,5 @@ end
 # function mpe_simulate(node::UpFlow⋀, active_samples::Vector{Bool}, result::Matrix{Bool})
 #     for child in node.children
 #         mpe_simulate(child, active_samples, result)
-#     end    
+#     end
 # end

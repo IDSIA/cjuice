@@ -4,7 +4,8 @@ Module with general utilities and missing standard library features that could b
 module Utils
 
 export to_long_mi,
-    generate_all, generate_data_all
+    generate_all, generate_data_all,
+    idm,lp
 
 
 ###################
@@ -30,7 +31,7 @@ function one_hot_encode(X::Array{T, 2}, categories::Array{T,1}) where {T<:Any}
     X_dash = zeros(Bool, size(X)[1], length(categories)*size(X)[2])
     for i = 1:size(X)[1], j = 1:size(X)[2]
             X_dash[i, (j-1)*length(categories) + findfirst(==(X[i,j]), categories)] = 1
-    end  
+    end
     X_dash
 end
 
@@ -70,5 +71,6 @@ function generate_data_all(N::Int)
     end
     data_all
 end
+
 
 end #module

@@ -70,8 +70,7 @@ function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) w
             end
         end
 
-        @show c
-        @show u
+
 
         for i=1:num_examples(data)
             pr(n)[i] = log(optx[i,:]'c[i,:])
@@ -670,7 +669,6 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
             val_min[i] = lp(c_co[i,:], bounds, false, true )
             marginal_lower[i] = lp(c_marg_lo[i,:], bounds, false, true)
             marginal_upper[i] = lp(c_marg_up[i,:], bounds, true, true )
-            @show marginal_lower[i], marginal_upper[i]
         end
 
 

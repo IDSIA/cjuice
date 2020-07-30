@@ -10,11 +10,14 @@ function idm(d :: Array{Int64,1}, s=2.0 :: Float64, logspace=true :: Bool)
 end
 
 function lp(c :: Array{Float64,1}, p :: Array{Float64,2}, maximize=true :: Bool, logspace=true :: Bool)
-    x = p[1,:]
+    x = p[:,2]
     i = sortperm(c,rev=maximize)[1]
-    x[i] = p[2,i]
+    #x[i] = p[2,i]
+    x[i] = getindex(p[i,:], 2)
     return logspace ? c'*exp.(x) : c'*x
 end
+
+
 
 function add_missingness(data :: PlainXData{Bool,BitArray{2}} , ratio :: Float64)
     data2 = convert.(Int8,data.x)

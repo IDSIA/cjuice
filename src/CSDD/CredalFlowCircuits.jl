@@ -1,54 +1,3 @@
-<<<<<<< HEAD
-#TODO This code seems to assume logspace flows as floating point numbers. if so, enforca that on type F
-
-
-#########
-#for local LP
-
-############
-
-
-using JuMP
-using Clp
-#using LinearAlgebra
-
-function lp(c :: Array{Float64,1}, p :: Array{Float64,2}, maximize=true :: Bool, logspace=true :: Bool)
-    x = p[:,2]
-    i = sortperm(c,rev=maximize)[1]
-    #x[i] = p[2,i]
-    x[i] = getindex(p[i,:], 2)
-
-    return logspace ? c'*exp.(x) : c'*x
-end
-
-function minimi(coeff :: Array{Float64,1}, l_bounds :: Array{Float64,1}, u_bounds :: Array{Float64,1})
-    my_model = Model(Clp.Optimizer)
-    set_optimizer_attribute(my_model, "LogLevel", 0)
-     set_optimizer_attribute(my_model, "Algorithm", 4)
-
-
-     @variable(my_model, l_bounds[i] <= x[i = 1:length(l_bounds)]<= u_bounds[i]) 
-     @objective(my_model,Min,coeff' *x) # perché anche * ?
-     @constraint(my_model, normalization, ones(Float64, length(l_bounds))'x == 1)
-    
-        
-     optimize!(my_model)
-        # println("Optimal Solutions:")
-        # println("x = ", JuMP.value.(x))
-        #  println("Optimal Value:")
-        #  println("min =", JuMP.objective_value(my_model))
-        #  #getobjectivevalue
-     return JuMP.objective_value(my_model)     
-end      
-
-
-=======
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
-##############
-
-#marginal upper
-
-###########
 
 function credal_marginal_upper_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}) where {E <: eltype(F)} where {O,F}
     resize_flows(circuit, num_examples(data))
@@ -392,7 +341,7 @@ end
 
 function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::Array{Float64,1}) where {E <: eltype(F)} where {O,F}
 
-    
+
     resize_flows(circuit, num_examples(data))
 
     conditional_lower_pass_up_node(n::UpFlowΔNode, ::PlainXData, mu::Array{Float64,1}) = ()
@@ -407,14 +356,6 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
 
     function conditional_lower_pass_up_node(n::UpFlowLiteral{O,F}, data::PlainXData{E}, mu::Array{Float64,1}) where {E <: eltype(F)} where {O,F}
-<<<<<<< HEAD
-        
-        println("LITERAL NODE")
-=======
-
-        #println("LITERAL NODE")
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
-
         npr = pr(n)
         nsize = length(npr)
         val_min = zeros(nsize)     # or ones?      # primo el tuple
@@ -422,11 +363,6 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
         marginal_upper = zeros(nsize) # terzo el tuple
         type = zeros( nsize)
 
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
         # values from data input
         #   *1,0 observed variable values;
         #   *2,3 query variable values, where  2:0 and 3:1
@@ -457,41 +393,32 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
             val_min[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= (ones(Float64,nsize) .- mu)[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)]
 
 
-<<<<<<< HEAD
-            
+
             marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
             marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
 
             marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
-            marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0 
+            marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
 
             # marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 0.0
             # marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 0.0
 
             # marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
-            # marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0    
-=======
-
-            marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 0.0
-            marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 0.0
-
-            marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
-            marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
+            # marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
         else
 
             val_min[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= (ones(Float64,nsize) .- mu)[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)]
 
             val_min[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= (zeros(Float64,nsize) .- mu)[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)]
 
-            
+
             marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
             marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
 
             marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
             marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
-            
-            
+
+
             # marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
             # marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
 
@@ -500,7 +427,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
         end
 
-      
+
 
 
 
@@ -558,17 +485,9 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
         type = zeros( length(npr))
         vect = ones( length(npr))
 
-<<<<<<< HEAD
-        
-
-    
-=======
-
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
         for i=1:length(n.children) # for CSDD this is 2
 
             #### Marginal messages: TODO work with their log
-<<<<<<< HEAD
             # broadcast!(*, marginal_lower, marginal_lower, getindex.(pr(n.children[i]),2)) SBAGLIATO!!! MI RITORNA LA SECONDA TUPLA
             # broadcast!(*, marginal_upper, marginal_upper, getindex.(pr(n.children[i]),3)) SBAGLIATO!!! MI RITORNA LA TERZA TUPLA
             marginal_lower .*= getindex.(pr(n.children[i]),2)
@@ -581,12 +500,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
             #println("marginal lowers del figlio -", i,"- ", getindex.(pr(n.children[i]),2))
             #println("marginal uppers del figlio -", i,"- ", getindex.(pr(n.children[i]),3))
 
-            
-=======
-            broadcast!(*, marginal_lower, marginal_lower, getindex.(pr(n.children[i]),2))
-            broadcast!(*, marginal_upper, marginal_upper, getindex.(pr(n.children[i]),3))
 
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
 
             ##### conditional message (val_min) is the product of pi_lower and marginal_lower/upper of the children, depending of the types of the latter
             # val_min for now has all entries set to 1
@@ -600,12 +514,6 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
         end
 
-<<<<<<< HEAD
-        
-=======
-
-
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
         ####################### WORK IN PROGRESS ########################
 
 
@@ -651,11 +559,6 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
         pr(n) .= [x for x in zip(val_min,marginal_lower,marginal_upper,type)]
 
-<<<<<<< HEAD
-        println("tuple AND - ", pr(n))
-        
-=======
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
 
         return nothing
     end
@@ -667,33 +570,27 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
         val_min = zeros( length(npr))
         marginal_lower = zeros( length(npr))
         marginal_upper = zeros( length(npr))
-<<<<<<< HEAD
-        type = zeros( length(npr)) 
-            
+        type = zeros( length(npr))
+
         # type :  enough to set it equal to any of its children, eg the first one
 
         type = getindex.(pr(n.children[1]),4)
-        
-=======
-        type = zeros( length(npr))
 
-        if n.children[1] isa UpFlowLiteral
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
 
-    
-         ##### qui risolvo, in parallelo per ogni instance (query) LP e storo gli ottimi nei vari vettori 
+        #if n.children[1] isa UpFlowLiteral
 
-           
-        c_co = Array{Float64}(undef, length(npr), length(n.children)) 
-        c_marg_lo = Array{Float64}(undef, length(npr), length(n.children)) 
-        c_marg_up = Array{Float64}(undef, length(npr), length(n.children)) 
+
+         ##### qui risolvo, in parallelo per ogni instance (query) LP e storo gli ottimi nei vari vettori
+
+
+        c_co = Array{Float64}(undef, length(npr), length(n.children))
+        c_marg_lo = Array{Float64}(undef, length(npr), length(n.children))
+        c_marg_up = Array{Float64}(undef, length(npr), length(n.children))
 
         #println("coefficenti prima - problema conditional", c_co)
         #println("coefficenti prima - problema marginal lower", c_marg_lo)
         #println("coefficenti prima - problema marginal upper", c_marg_up)
 
-<<<<<<< HEAD
-        println("AAAAAAAAAA")
 
 
         println("pr.(n.children): ", pr.(n.children))
@@ -707,31 +604,30 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
         println("getindex.(pr.(n.children),2): ", getindex.(pr.(n.children),2))
 
 
-        # for i=1:length(npr) 
-        #     c_co[i,:] = getindex.(getindex.(pr.(n.children),i),1) # vettore dei coefficenti del i-esimo problema COND  (i-esima instance)
-        #     c_marg_lo[i,:] = getindex.(getindex.(pr.(n.children),i),2) # vettore dei coefficenti del i-esimo problema MARG_LOWER (i-esima instance)
-        #     c_marg_up[i,:] = getindex.(getindex.(pr.(n.children),i),3) # vettore dei coefficenti del i-esimo problema MARG_UPPER  (i-esima instance)
-        # end
+        for i=1:length(npr)
+             c_co[i,:] = getindex.(getindex.(pr.(n.children),i),1) # vettore dei coefficenti del i-esimo problema COND  (i-esima instance)
+             c_marg_lo[i,:] = getindex.(getindex.(pr.(n.children),i),2) # vettore dei coefficenti del i-esimo problema MARG_LOWER (i-esima instance)
+             c_marg_up[i,:] = getindex.(getindex.(pr.(n.children),i),3) # vettore dei coefficenti del i-esimo problema MARG_UPPER  (i-esima instance)
+        end
         # println("coefficenti dopo - problema conditional", c_co)
         # println("coefficenti dopo - problema marginal lower", c_marg_lo)
         # println("coefficenti dopo - problema marginal upper", c_marg_up)
 
 
-         # con lp PROVA 
-=======
+         # con lp PROVA
 
-                coeff[:,i] .= getindex.(pr(n.children[i]),1)
+                #coeff[:,i] .= getindex.(pr(n.children[i]),1)
 
-            end
+            #end
             #print("=========xxx============")
-            for i=1:length(npr) ### TODO broadcast this
-                val_min[i] = minimi(coeff[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas_u))
+            #for i=1:length(npr) ### TODO broadcast this
+                #val_min[i] = minimi(coeff[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas_u))
                 #@show coeff[i,:]
                 #@show typeof(coeff[i,:])
-            end
+            #end
 
              #println("IT'S A TOP !")
-        else
+        #else
 
 
 
@@ -741,50 +637,43 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
          ## conditional
 
 
-            c_co = Array{Float64}(undef, length(npr), length(n.children))
-            c_marg_lo = Array{Float64}(undef, length(npr), length(n.children))
-            c_marg_up = Array{Float64}(undef, length(npr), length(n.children))
+            #c_co = Array{Float64}(undef, length(npr), length(n.children))
+            #c_marg_lo = Array{Float64}(undef, length(npr), length(n.children))
+            #c_marg_up = Array{Float64}(undef, length(npr), length(n.children))
 
 
-            for i=1:length(npr)
-                c_co[i,:] = getindex.(getindex.(pr.(n.children),i),1) # vettore dei coefficenti del i-esimo problema COND  (i-esima instance)
-                c_marg_lo[i,:] = getindex.(getindex.(pr.(n.children),i),2) # vettore dei coefficenti del i-esimo problema MARG_LOWER (i-esima instance)
-                c_marg_up[i,:] = getindex.(getindex.(pr.(n.children),i),3) # vettore dei coefficenti del i-esimo problema MARG_UPPER  (i-esima instance)
-            end
+            #for i=1:length(npr)
+            #    c_co[i,:] = getindex.(getindex.(pr.(n.children),i),1) # vettore dei coefficenti del i-esimo problema COND  (i-esima instance)
+            #    c_marg_lo[i,:] = getindex.(getindex.(pr.(n.children),i),2) # vettore dei coefficenti del i-esimo problema MARG_LOWER (i-esima instance)
+            #    c_marg_up[i,:] = getindex.(getindex.(pr.(n.children),i),3) # vettore dei coefficenti del i-esimo problema MARG_UPPER  (i-esima instance)
+            #end
 
 
 
-            for i=1:length(npr)
+            #for i=1:length(npr)
                 #@show c_co[i,:]
                 #@show typeof(c_co[i,:])
-                val_min[i] = minimi(c_co[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas) )
+                #val_min[i] = minimi(c_co[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas) )
                 #@show val_min[i]
-                marginal_lower[i] = minimi(c_marg_lo[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas) )
-                marginal_upper[i] = minimi(c_marg_up[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas) )
-            end
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
+                #marginal_lower[i] = minimi(c_marg_lo[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas) )
+                #marginal_upper[i] = minimi(c_marg_up[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas) )
+            #end
 
         bounds = Array{Float64,2}(undef, 2, length(n.children))
-
-         
         bounds = hcat(exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas_u))
 
-<<<<<<< HEAD
-        
 
 
-        for i=1:length(npr) 
+        for i=1:length(npr)
             val_min[i] = lp(c_co[i,:], bounds, false, false )
             marginal_lower[i] = lp(c_marg_lo[i,:], bounds, false, false)
-            marginal_upper[i] = lp(c_marg_up[i,:], bounds, true, false )   
+            marginal_upper[i] = lp(c_marg_up[i,:], bounds, true, false )
         end
 
 
-        
-=======
 
 
->>>>>>> aa706c3d21d34d5d27929b9d4ad0657f1384a7e4
+
         pr(n) .= [x for x in zip(val_min,marginal_lower,marginal_upper,type)]
 
         println("tuple OR - ", pr(n))

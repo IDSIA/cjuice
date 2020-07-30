@@ -1,4 +1,4 @@
-using JuMP, Clp
+#using JuMP, Clp
 
 function idm(d :: Array{Int64,1}, s=2.0 :: Float64, logspace=true :: Bool)
     n = length(d)
@@ -24,7 +24,7 @@ function add_missingness(data :: PlainXData{Bool,BitArray{2}} , ratio :: Float64
     data2[rand(Float16,size(data.x)) .< ratio] .= -1
     return data2
 end
-
+#=
 function minimi(coeff :: Array{Float64,1}, l_bounds :: Array{Float64,1}, u_bounds :: Array{Float64,1})
     my_model = Model(Clp.Optimizer)
     set_optimizer_attribute(my_model, "LogLevel", 0)
@@ -35,3 +35,4 @@ function minimi(coeff :: Array{Float64,1}, l_bounds :: Array{Float64,1}, u_bound
     optimize!(my_model)
     return JuMP.objective_value(my_model)
 end
+=#

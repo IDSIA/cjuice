@@ -460,14 +460,14 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
          # Construct the tuple to  propagate 4 values : conditional message, marginal lower message, marginal upper message, type
          pr(n) .= [x for x in zip(val_min,marginal_lower,marginal_upper,type)]
 
-         println("tuple literal - ", pr(n))
+         #println("tuple literal - ", pr(n))
 
          return nothing
     end
 
     function conditional_lower_pass_up_node(n::UpFlow⋀Cached, ::PlainXData, mu::Array{Float64,1})
 
-        println("AND NODE")
+        #println("AND NODE")
 
         # to check if bot nodes are represented as and nodes
         # if n.children[1] isa UpFlowLiteral && n.children[2] isa UpFlowLiteral
@@ -564,7 +564,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
     end
 
     function conditional_lower_pass_up_node(n::UpFlow⋁Cached,  ::PlainXData, mu::Array{Float64,1})
-        println("OR NODE")
+        #println("OR NODE")
 
         npr = pr(n)
         val_min = zeros( length(npr))
@@ -593,15 +593,15 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
 
 
-        println("pr.(n.children): ", pr.(n.children))
+        #println("pr.(n.children): ", pr.(n.children))
 
-        println("getindex.(pr.(n.children),1) : ", getindex.(pr.(n.children),1))
-        println("c_marg_lo = getindex.(getindex.(pr.(n.children),1),2) : ", getindex.(getindex.(pr.(n.children),1),2))
-        println("c_marg_up = getindex.(getindex.(pr.(n.children),1),3) : ", getindex.(getindex.(pr.(n.children),1),3))
+        #println("getindex.(pr.(n.children),1) : ", getindex.(pr.(n.children),1))
+        #println("c_marg_lo = getindex.(getindex.(pr.(n.children),1),2) : ", getindex.(getindex.(pr.(n.children),1),2))
+        #println("c_marg_up = getindex.(getindex.(pr.(n.children),1),3) : ", getindex.(getindex.(pr.(n.children),1),3))
 
 
 
-        println("getindex.(pr.(n.children),2): ", getindex.(pr.(n.children),2))
+        #println("getindex.(pr.(n.children),2): ", getindex.(pr.(n.children),2))
 
 
         for i=1:length(npr)
@@ -670,14 +670,13 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
             val_min[i] = lp(c_co[i,:], bounds, false, true )
             marginal_lower[i] = lp(c_marg_lo[i,:], bounds, false, true)
             marginal_upper[i] = lp(c_marg_up[i,:], bounds, true, true )
-            println("LILITH")
             @show marginal_lower[i], marginal_upper[i]
         end
 
 
         pr(n) .= [x for x in zip(val_min,marginal_lower,marginal_upper,type)]
 
-        println("tuple OR - ", pr(n))
+        #println("tuple OR - ", pr(n))
 
         return nothing
     end

@@ -13,12 +13,7 @@ function lp(c :: Array{Float64,1}, p :: Array{Float64,2}, maximize=true :: Bool,
     x = p[:,1]
 
     i = sortperm(c,rev=maximize)[1]
-    #x[i] = p[2,i]
     x[i] = getindex(p[i,:], 2)
-    @show c, x
-    @show p
-    @show maximize
-
     return logspace ? c'*exp.(x) : c'*x
 end
 

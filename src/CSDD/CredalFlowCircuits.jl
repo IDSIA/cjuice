@@ -493,12 +493,12 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
             marginal_lower .*= getindex.(pr(n.children[i]),2)
             marginal_upper .*= getindex.(pr(n.children[i]),3)
 
-            #println("figlio -", i, "- è un ", typeof(n.children[i]))
-
-            #println("tuple del figlio -", i, "- ", pr(n.children[i]))
-
-            #println("marginal lowers del figlio -", i,"- ", getindex.(pr(n.children[i]),2))
-            #println("marginal uppers del figlio -", i,"- ", getindex.(pr(n.children[i]),3))
+            # println("figlio -", i, "- è un ", typeof(n.children[i]))
+            #
+            # println("tuple del figlio -", i, "- ", pr(n.children[i]))
+            #
+            # println("marginal lowers del figlio -", i,"- ", getindex.(pr(n.children[i]),2))
+            # println("marginal uppers del figlio -", i,"- ", getindex.(pr(n.children[i]),3))
 
 
 
@@ -660,18 +660,19 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
             #end
 
         bounds = Array{Float64,2}(undef, 2, length(n.children))
-        bounds = hcat(exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas_u))
+        #bounds = hcat(exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas_u))
+        bounds = hcat(prob_origin(n).log_thetas, prob_origin(n).log_thetas_u)
+
 
 
 
         for i=1:length(npr)
-            val_min[i] = lp(c_co[i,:], bounds, false, false )
-            marginal_lower[i] = lp(c_marg_lo[i,:], bounds, false, false)
-            marginal_upper[i] = lp(c_marg_up[i,:], bounds, true, false )
+            val_min[i] = lp(c_co[i,:], bounds, false, true )
+            marginal_lower[i] = lp(c_marg_lo[i,:], bounds, false, true)
+            marginal_upper[i] = lp(c_marg_up[i,:], bounds, true, true )
+            println("LILITH")
+            @show marginal_lower[i], marginal_upper[i]
         end
-
-
-
 
 
         pr(n) .= [x for x in zip(val_min,marginal_lower,marginal_upper,type)]

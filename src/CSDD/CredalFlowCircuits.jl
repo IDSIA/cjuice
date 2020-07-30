@@ -11,9 +11,18 @@ using JuMP
 using Clp
 #using LinearAlgebra
 
+function lp(c :: Array{Float64,1}, p :: Array{Float64,2}, maximize=true :: Bool, logspace=true :: Bool)
+    x = p[:,2]
+    i = sortperm(c,rev=maximize)[1]
+    #x[i] = p[2,i]
+    x[i] = getindex(p[i,:], 2)
+
+    return logspace ? c'*exp.(x) : c'*x
+end
+
 function minimi(coeff :: Array{Float64,1}, l_bounds :: Array{Float64,1}, u_bounds :: Array{Float64,1})
     my_model = Model(Clp.Optimizer)
-    set_optimizer_attribute(my_model, "LogLevel", 1)
+    set_optimizer_attribute(my_model, "LogLevel", 0)
      set_optimizer_attribute(my_model, "Algorithm", 4)
 
 
@@ -377,6 +386,8 @@ end
 #########
 
 function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::Array{Float64,1}) where {E <: eltype(F)} where {O,F}
+
+    
     resize_flows(circuit, num_examples(data))
     
     conditional_lower_pass_up_node(n::UpFlowΔNode, ::PlainXData, mu::Array{Float64,1}) = ()
@@ -392,15 +403,15 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
     function conditional_lower_pass_up_node(n::UpFlowLiteral{O,F}, data::PlainXData{E}, mu::Array{Float64,1}) where {E <: eltype(F)} where {O,F}
         
-        #println("LITERAL NODE")
+        println("LITERAL NODE")
 
         npr = pr(n)
         nsize = length(npr)
         val_min = zeros(nsize)     # or ones?      # primo el tuple
-        marginal_lower = zeros(nsize) # secondo el tuple
+        marginal_lower = zeros(nsize) # secondo el tuple !!! e non zeros ! nella prog marginale P(empty obs)=1 !!!
         marginal_upper = zeros(nsize) # terzo el tuple
         type = zeros( nsize)
-        
+
         
         # values from data input
         #   *1,0 observed variable values; 
@@ -427,31 +438,46 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
         
         if positive(n)
 
-             val_min[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= (zeros(Float64,nsize) .- mu)[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)]
+            val_min[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= (zeros(Float64,nsize) .- mu)[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)]
 
             val_min[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= (ones(Float64,nsize) .- mu)[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)]
 
 
             
-            marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 0.0
-            marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 0.0
+            marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
+            marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
 
             marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
-            marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0    
+            marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0 
+
+            # marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 0.0
+            # marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 0.0
+
+            # marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
+            # marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0    
         else
 
             val_min[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= (ones(Float64,nsize) .- mu)[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)]
 
             val_min[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= (zeros(Float64,nsize) .- mu)[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)]
 
+            
             marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
             marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
 
-            marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 0.0
-            marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 0.0
+            marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
+            marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 1.0
+            
+            
+            # marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
+            # marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 2.0)] .= 1.0
+
+            # marginal_lower[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 0.0
+            # marginal_upper[feature_matrix(data)[:,variable(n)] .== (zeros(Float64,nsize) .+ 3.0)] .= 0.0
 
         end
 
+      
 
 
 
@@ -475,7 +501,6 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
          type[feature_matrix(data)[:,variable(n)] .< zeros(Float64,nsize)] .= 2
 
 
-
          # TODO put everything in log space
 
          #marginal_lower .= log.(marginal_lower .+ 1e-300 )
@@ -485,12 +510,14 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
          # Construct the tuple to  propagate 4 values : conditional message, marginal lower message, marginal upper message, type
          pr(n) .= [x for x in zip(val_min,marginal_lower,marginal_upper,type)]
 
+         println("tuple literal - ", pr(n))
+
          return nothing
     end
 
     function conditional_lower_pass_up_node(n::UpFlow⋀Cached, ::PlainXData, mu::Array{Float64,1})
 
-        #println("AND NODE")
+        println("AND NODE")
 
         # to check if bot nodes are represented as and nodes
         # if n.children[1] isa UpFlowLiteral && n.children[2] isa UpFlowLiteral
@@ -508,12 +535,24 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
         type = zeros( length(npr))
         vect = ones( length(npr))
 
+        
+
     
         for i=1:length(n.children) # for CSDD this is 2
     
             #### Marginal messages: TODO work with their log
-            broadcast!(*, marginal_lower, marginal_lower, getindex.(pr(n.children[i]),2))
-            broadcast!(*, marginal_upper, marginal_upper, getindex.(pr(n.children[i]),3))
+            # broadcast!(*, marginal_lower, marginal_lower, getindex.(pr(n.children[i]),2)) SBAGLIATO!!! MI RITORNA LA SECONDA TUPLA
+            # broadcast!(*, marginal_upper, marginal_upper, getindex.(pr(n.children[i]),3)) SBAGLIATO!!! MI RITORNA LA TERZA TUPLA
+            marginal_lower .*= getindex.(pr(n.children[i]),2)
+            marginal_upper .*= getindex.(pr(n.children[i]),3)
+
+            #println("figlio -", i, "- è un ", typeof(n.children[i]))
+
+            #println("tuple del figlio -", i, "- ", pr(n.children[i]))
+
+            #println("marginal lowers del figlio -", i,"- ", getindex.(pr(n.children[i]),2))
+            #println("marginal uppers del figlio -", i,"- ", getindex.(pr(n.children[i]),3))
+
             
 
             ##### conditional message (val_min) is the product of pi_lower and marginal_lower/upper of the children, depending of the types of the latter
@@ -528,8 +567,7 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
         
         end
 
-
-     
+        
         ####################### WORK IN PROGRESS ########################
 
 
@@ -551,13 +589,17 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
        
 
 
-
+        #println("val min prima ", val_min)
 
         val_min[cond_query_second_child .& cond_positive_val_second_child].*= getindex.(pr(n.children[1]),2)[cond_query_second_child .& cond_positive_val_second_child]
         val_min[cond_query_second_child  .& cond_negative_val_second_child].*= getindex.(pr(n.children[1]),3)[cond_query_second_child .& cond_negative_val_second_child]
 
+       # println("val min step 1 ", val_min)
+
         val_min[cond_query_first_child .& cond_positive_val_first_child].*= getindex.(pr(n.children[2]),2)[cond_query_first_child .& cond_positive_val_first_child]
         val_min[cond_query_first_child .& cond_negative_val_first_child ].*= getindex.(pr(n.children[2]),3)[cond_query_first_child .& cond_negative_val_first_child]
+
+        #println("val min step 2 ", val_min)
 
 
         ### original one:  multiply val_min by the correct marginal 
@@ -570,72 +612,85 @@ function conditional_lower_pass_up(circuit::UpFlowΔ{O,F}, data::XData{E}, mu::A
 
 
         pr(n) .= [x for x in zip(val_min,marginal_lower,marginal_upper,type)]
+
+        println("tuple AND - ", pr(n))
         
 
         return nothing
     end
 
     function conditional_lower_pass_up_node(n::UpFlow⋁Cached,  ::PlainXData, mu::Array{Float64,1})
-        #println("OR NODE")
+        println("OR NODE")
 
         npr = pr(n)
         val_min = zeros( length(npr))
         marginal_lower = zeros( length(npr))
         marginal_upper = zeros( length(npr))
-        type = zeros( length(npr))
+        type = zeros( length(npr)) 
+            
+        # type :  enough to set it equal to any of its children, eg the first one
+
+        type = getindex.(pr(n.children[1]),4)
         
-        if n.children[1] isa UpFlowLiteral
 
-            coeff = Array{Float64}(undef, length(npr), length(n.children)) # length(n.children) dev'essere sempre 2, assert?
-
-
-            for i=1:2
-
-                
-                coeff[:,i] .= getindex.(pr(n.children[i]),1) 
-                
-            end
-
-            for i=1:length(npr) ### TODO broadcast this
-                val_min[i] = minimi(coeff[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas_u))
-
-            end 
-
-             #println("IT'S A TOP !")
-        else 
-        
-             
-
-
+    
          ##### qui risolvo, in parallelo per ogni instance (query) LP e storo gli ottimi nei vari vettori 
 
-         ## conditional 
-
            
-            c_co = Array{Float64}(undef, length(npr), length(n.children)) 
-            c_marg_lo = Array{Float64}(undef, length(npr), length(n.children)) 
-            c_marg_up = Array{Float64}(undef, length(npr), length(n.children)) 
+        c_co = Array{Float64}(undef, length(npr), length(n.children)) 
+        c_marg_lo = Array{Float64}(undef, length(npr), length(n.children)) 
+        c_marg_up = Array{Float64}(undef, length(npr), length(n.children)) 
+
+        #println("coefficenti prima - problema conditional", c_co)
+        #println("coefficenti prima - problema marginal lower", c_marg_lo)
+        #println("coefficenti prima - problema marginal upper", c_marg_up)
+
+        println("AAAAAAAAAA")
 
 
-            for i=1:length(npr) 
-                c_co[i,:] = getindex.(getindex.(pr.(n.children),i),1) # vettore dei coefficenti del i-esimo problema COND  (i-esima instance)
-                c_marg_lo[i,:] = getindex.(getindex.(pr.(n.children),i),2) # vettore dei coefficenti del i-esimo problema MARG_LOWER (i-esima instance)
-                c_marg_up[i,:] = getindex.(getindex.(pr.(n.children),i),3) # vettore dei coefficenti del i-esimo problema MARG_UPPER  (i-esima instance)
-            end
-            
-    
+        println("pr.(n.children): ", pr.(n.children))
 
-            for i=1:length(npr) 
-                val_min[i] = minimi(c_co[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas) )
-                marginal_lower[i] = minimi(c_marg_lo[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas) )
-                marginal_upper[i] = minimi(c_marg_up[i,:], exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas) )   
-            end
+        println("getindex.(pr.(n.children),1) : ", getindex.(pr.(n.children),1))
+        println("c_marg_lo = getindex.(getindex.(pr.(n.children),1),2) : ", getindex.(getindex.(pr.(n.children),1),2))
+        println("c_marg_up = getindex.(getindex.(pr.(n.children),1),3) : ", getindex.(getindex.(pr.(n.children),1),3))
 
+
+
+        println("getindex.(pr.(n.children),2): ", getindex.(pr.(n.children),2))
+
+
+        # for i=1:length(npr) 
+        #     c_co[i,:] = getindex.(getindex.(pr.(n.children),i),1) # vettore dei coefficenti del i-esimo problema COND  (i-esima instance)
+        #     c_marg_lo[i,:] = getindex.(getindex.(pr.(n.children),i),2) # vettore dei coefficenti del i-esimo problema MARG_LOWER (i-esima instance)
+        #     c_marg_up[i,:] = getindex.(getindex.(pr.(n.children),i),3) # vettore dei coefficenti del i-esimo problema MARG_UPPER  (i-esima instance)
+        # end
+        # println("coefficenti dopo - problema conditional", c_co)
+        # println("coefficenti dopo - problema marginal lower", c_marg_lo)
+        # println("coefficenti dopo - problema marginal upper", c_marg_up)
+
+
+         # con lp PROVA 
+
+        bounds = Array{Float64,2}(undef, 2, length(n.children))
+
+         
+        bounds = hcat(exp.(prob_origin(n).log_thetas), exp.(prob_origin(n).log_thetas_u))
+
+        
+
+
+        for i=1:length(npr) 
+            val_min[i] = lp(c_co[i,:], bounds, false, false )
+            marginal_lower[i] = lp(c_marg_lo[i,:], bounds, false, false)
+            marginal_upper[i] = lp(c_marg_up[i,:], bounds, true, false )   
         end
 
-        
+
         
         pr(n) .= [x for x in zip(val_min,marginal_lower,marginal_upper,type)]
+
+        println("tuple OR - ", pr(n))
+
         return nothing
     end
     

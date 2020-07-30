@@ -30,7 +30,7 @@ println("csdd done")
 # Testing conditional inference upper and lower bounds
 # 1,0 observed/evidence variables values; 2,3 query varables values for 0,1;  -1 marginalize variables.
 # cond_queries:    X_1=0,X_2=0|X_3=0,X_4=0
-#             X_15=1,X_16=1|X_1=1,X_2=1    
+#             X_15=1,X_16=1|X_1=1,X_2=1
 
 cond_queries= XData(Int8.([2 1 0 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1; 1 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 3 1; -1 1 -1 -1 -1 -1 -1 -1 -1 -1 1 -1 -1 -1 3 1 ]))
 lower_cond1 = conditional_lower(csdd, cond_queries, [0.5, 0.2, 0.7])

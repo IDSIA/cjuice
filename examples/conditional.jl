@@ -15,40 +15,83 @@ Pkg.activate(".")
 using ProbabilisticCircuits
 
 
-
-
-
-
 dataSet=dataset(twenty_datasets("nltcs"); do_shuffle=false, batch_size=-1)
 dataTrain = dataSet.train
 
 
 #csdd = learn_credal_circuit(WXData(dataTrain), 40.0); #using clt
 csdd =learn_struct_credal_circuit(WXData(dataTrain), 40.0)[1]; #using clt and vtree
-println("csdd done")
+
 
 # Testing conditional inference upper and lower bounds
 # 1,0 observed/evidence variables values; 2,3 query varables values for 0,1;  -1 marginalize variables.
-# cond_queries:    X_1=0,X_2=0|X_3=0,X_4=0
-#             X_15=1,X_16=1|X_1=1,X_2=1
 
-cond_queries= XData(Int8.([2 1 0 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1; 1 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 3 1; -1 1 -1 -1 -1 -1 -1 -1 -1 -1 1 -1 -1 -1 3 1 ]))
-lower_cond1 = conditional_lower(csdd, cond_queries, [0.5, 0.2, 0.7])
-#lower_cond2 = conditional_lower(csdd, cond_queries, [1.0, 1.0, 1.0])
+# cond_queries X=0|e ,  X=1|e , X=1| e'
+cond_queries= XData(Int8.([2 1 0 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1; 3 1 0 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1; 1 1 1 1 -1 -1 -1 1 -1 1 -1 1 -1 -1 3 1 ]))
 
-#upper_cond = conditional_upper(csdd, cond_queries)
-println("Lower cond. prob: $(lower_cond1)")
-#println("Lower cond. prob: $(lower_cond2)")
 
-#println("Upper cond. prob: $(upper_cond)")
+### bissection scheme
 
-# for n in csdd
-#     if n isa Credal⋀
-#     println("nr of children : ", length(n.children))
-#     println("tipo children1 : ", typeof(n.children[1]))
-#     println("tipo children2 : ", typeof(n.children[2]))
+a = zeros(Float64, num_examples(cond_queries))
+b = ones(Float64, num_examples(cond_queries))
+m = zeros(Float64, num_examples(cond_queries))
+cond_lo = zeros(Float64, num_examples(cond_queries))
+
+aa = zeros(Float64, num_examples(cond_queries))
+bb = ones(Float64, num_examples(cond_queries))
+mm = zeros(Float64, num_examples(cond_queries))
+cond_up = zeros(Float64, num_examples(cond_queries))
+
+for k=1:10
+    for i=1:num_examples(cond_queries)
+        if conditional_lower(csdd, cond_queries, a)[i]* conditional_lower(csdd, cond_queries, b)[i] < 0.0
+            m[i] = 0.5*(a[i]+b[i])
+            conditional_lower(csdd, cond_queries, a)[i]* conditional_lower(csdd, cond_queries, m)[i] < 0.0 ? b[i]=m[i] : a[i]=m[i]
+        end
+
+        if conditional_upper(csdd, cond_queries, aa)[i]* conditional_upper(csdd, cond_queries, bb)[i] < 0.0
+            mm[i] = 0.5*(aa[i]+bb[i])
+            conditional_upper(csdd, cond_queries, aa)[i]* conditional_upper(csdd, cond_queries, mm)[i] < 0.0 ? bb[i]=mm[i] : aa[i]=mm[i]
+        end
+    end
+end
+
+cond_lo = 0.5*(a+b)
+cond_up = 0.5*(aa+bb)
+
+
+
+
+println("conditional lower probability estimated intervals = ", hcat(a,b))
+println("estimated lower conditional probabilities = ", cond_lo)
+
+println("conditional upper probability estimated intervals = ", hcat(aa,bb))
+println("estimated conditional upper probabilities = ", cond_up)
+
+
+
+
+
+
+
+
+
+# aa = zeros(Float64, num_examples(cond_queries))
+# bb = ones(Float64, num_examples(cond_queries))
+# mm = zeros(Float64, num_examples(cond_queries))
+# cond_up = zeros(Float64, num_examples(cond_queries))
+#
+# for k=1:10
+#     for i=1:num_examples(cond_queries)
+#         if conditional_upper(csdd, cond_queries, aa)[i]* conditional_upper(csdd, cond_queries, bb)[i] < 0.0
+#             mm[i] = 0.5*(aa[i]+bb[i])
+#             conditional_upper(csdd, cond_queries, aa)[i]* conditional_upper(csdd, cond_queries, mm)[i] < 0.0 ? bb[i]=mm[i] : aa[i]=mm[i]
+#         end
 #     end
-
 # end
-
- 
+#
+# cond_up = 0.5*(aa+bb)
+#
+#
+# println("conditional upper probability estimated intervals = ", hcat(aa,bb))
+# println("estimated conditional upper probabilities = ", cond_up)

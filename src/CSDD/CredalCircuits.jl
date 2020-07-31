@@ -457,8 +457,8 @@ function marginal_log_likelihood_lower_dataset(pc::CredalΔ, dataset::PlainXData
 Calculate conditional inference upper bound
 """
 
-function conditional_upper(pc::CredalΔ, batch::PlainXData{Int8})
-    conditional_upper_per_instance(pc, batch)[2]
+function conditional_upper(pc::CredalΔ, batch::PlainXData{Int8}, mu::Array{Float64,1})
+    conditional_upper_per_instance(pc, batch, mu)[2]
 end
 
 
@@ -474,11 +474,11 @@ end
 """
 Calculate conditional inference upper bound per instance
 """
-function conditional_upper_per_instance(pc::CredalΔ, batch::PlainXData{Int8})
+function conditional_upper_per_instance(pc::CredalΔ, batch::PlainXData{Int8}, mu::Array{Float64,1})
     opts = (compact⋀=false, compact⋁=false)
     #Initialize the flows as a tuple instead of a single value
     fc = UpFlowΔ(pc, num_examples(batch), Tuple{Float64,Float64,Float64,Float64},opts);
-    (fc, conditional_upper_instance(fc, batch))
+    (fc, conditional_upper_instance(fc, batch, mu))
 end
 
 """
@@ -495,10 +495,12 @@ end
 Calculate conditional inference upper bound per instance
 
 """
-function conditional_upper_instance(fc::UpFlowΔ, batch::PlainXData{Int8})
+function conditional_upper_instance(fc::UpFlowΔ, batch::PlainXData{Int8}, mu::Array{Float64,1})
     # @assert (prob_origin(fc[end]) isa ProbΔNode) "FlowΔ must originate in a ProbΔ"
-    conditional_upper_pass_up(fc, batch)
-    pr(fc[end])
+    conditional_upper_pass_up(fc, batch, mu)
+    cond = zeros(Float64, num_examples(batch))
+    cond .= getindex.(pr(fc[end]),1)
+    return cond
 end
 
 
@@ -509,7 +511,9 @@ Calculate conditional inference lowe bound per instance
 function conditional_lower_instance(fc::UpFlowΔ, batch::PlainXData{Int8}, mu::Array{Float64,1})
     # @assert (prob_origin(fc[end]) isa ProbΔNode) "FlowΔ must originate in a ProbΔ"
     conditional_lower_pass_up(fc, batch, mu)
-    pr(fc[end])
+    cond = zeros(Float64, num_examples(batch))
+    cond .= getindex.(pr(fc[end]),1)
+    return cond
 end
 """
 # function check_parameter_integrity(circuit::CredalΔ)

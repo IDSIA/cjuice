@@ -95,3 +95,19 @@ println("estimated conditional upper probabilities = ", cond_up)
 #
 # println("conditional upper probability estimated intervals = ", hcat(aa,bb))
 # println("estimated conditional upper probabilities = ", cond_up)
+
+# Bisection Code (Alessandro)
+n_iteraz = 15
+mu_left = zeros(Float64, num_examples(cond_queries))
+mu_right = ones(Float64, num_examples(cond_queries))
+for k in 1:n_iteraz
+mu_middle .= (mu_left + mu_right) ./ 2.0
+f_middle = conditional_upper(csdd, cond_queries, mu_middle)
+f_left = conditional_upper(csdd, cond_queries, mu_left)
+f_right = conditional_upper(csdd, cond_queries, mu_right)
+mu_right[f_left .* f_middle .< 0.0] .= mu_middle[f_left .* f_middle .< 0.0]
+mu_left[f_left .* f_middle .>= 0.0] .= mu_middle[f_left .* f_middle .>= 0.0]
+f_left = conditional_upper(csdd, cond_queries, mu_left)
+f_right = conditional_upper(csdd, cond_queries, mu_right)
+end
+@show mu_middle
